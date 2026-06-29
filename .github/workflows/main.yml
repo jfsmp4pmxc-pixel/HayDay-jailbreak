@@ -1,0 +1,38 @@
+name: Build iOS Bypass Dylib
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch: # Cho phép bấm nút chạy bằng tay trên web GitHub
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout mã nguồn
+      uses: actions/checkout@v4
+
+    - name: Thiết lập Xcode SDK
+      run: |
+        xcrun --sdk iphoneos --show-sdk-path
+
+    - name: Biên dịch Dylib bằng Clang (iOS ARM64)
+      run: |
+        clang -dynamiclib -isysroot $(xcrun --sdk iphoneos --show-sdk-path) \
+        -arch arm64 \
+        -miphoneos-version-min=15.0 \
+        -framework Foundation \
+        main.c -o Bypass.dylib
+
+    - name: Kiểm tra thông tin tệp xuất ra
+      run: |
+        file Bypass.dylib
+
+    - name: Tải thành phẩm lên GitHub Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: Bypass-Dylib
+        path: Bypass.dylib
